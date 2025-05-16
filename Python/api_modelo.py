@@ -14,23 +14,23 @@ colecao_filmes = db["generos"]
 # ==== CARREGAR MODELOS ====
 MODELOS = {
     "oscar_nominated": (
-        joblib.load("Python/Joblib/best_oscar_nominated_xgboost.joblib"),
-        joblib.load("Python/Joblib/preprocessor_oscar_nominated.joblib"),
+        joblib.load("Joblib/best_oscar_nominated_xgboost.joblib"),
+        joblib.load("Joblib/preprocessor_oscar_nominated.joblib"),
         ['Year', 'Duration', 'Rating', 'Votes', 'MPA', 'Languages', 'directors', 'writers', 'stars', 'genre1', 'genre2', 'globe_nominated', 'globe_winner', 'description']
     ),
     "oscar_winner": (
-        joblib.load("Python/Joblib/best_oscar_winner_xgboost.joblib"),
-        joblib.load("Python/Joblib/preprocessor_oscar_winner.joblib"),
+        joblib.load("Joblib/best_oscar_winner_xgboost.joblib"),
+        joblib.load("Joblib/preprocessor_oscar_winner.joblib"),
         ['Year', 'Duration', 'Rating', 'Votes', 'MPA', 'Languages', 'directors', 'writers', 'stars', 'genre1', 'genre2', 'oscar_nominated', 'globe_nominated', 'globe_winner', 'description']
     ),
     "globe_nominated": (
-        joblib.load("Python/Joblib/best_globe_nominated_xgboost.joblib"),
-        joblib.load("Python/Joblib/preprocessor_globe_nominated.joblib"),
+        joblib.load("Joblib/best_globe_nominated_xgboost.joblib"),
+        joblib.load("Joblib/preprocessor_globe_nominated.joblib"),
         ['Year', 'Duration', 'Rating', 'Votes', 'MPA', 'Languages', 'directors', 'writers', 'stars', 'genre1', 'genre2', 'oscar_nominated', 'globe_winner', 'description']
     ),
     "globe_winner": (
-        joblib.load("Python/Joblib/best_globe_winner_xgboost.joblib"),
-        joblib.load("Python/Joblib/preprocessor_globe_winner.joblib"),
+        joblib.load("Joblib/best_globe_winner_xgboost.joblib"),
+        joblib.load("Joblib/preprocessor_globe_winner.joblib"),
         ['Year', 'Duration', 'Rating', 'Votes', 'MPA', 'Languages', 'directors', 'writers', 'stars', 'genre1', 'genre2', 'oscar_nominated', 'globe_nominated', 'description']
     ),
 }
