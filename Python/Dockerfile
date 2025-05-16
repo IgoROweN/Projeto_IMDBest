@@ -1,19 +1,20 @@
 # Imagem base com Python 3.11
 FROM python:3.11-slim
 
-# Definir diretório de trabalho
+# Diretório de trabalho
 WORKDIR /app
 
-# Copiar os arquivos do projeto
+# Copiar todos os arquivos do projeto
 COPY . /app
 
-# Instalar dependências de sistema para numpy, pandas, etc.
+# Instalar dependências de sistema
 RUN apt-get update && apt-get install -y \
     build-essential \
     gcc \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar bibliotecas Python necessárias
+# Instalar bibliotecas Python (incluindo xgboost)
 RUN pip install --no-cache-dir \
     fastapi \
     uvicorn \
@@ -21,9 +22,10 @@ RUN pip install --no-cache-dir \
     numpy \
     pymongo \
     joblib \
-    scikit-learn
+    scikit-learn \
+    xgboost
 
-# Expor a porta do FastAPI
+# Expor a porta da API
 EXPOSE 8000
 
 # Rodar a aplicação
