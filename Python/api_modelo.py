@@ -2,12 +2,16 @@ import pandas as pd
 import numpy as np
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
+from pymongo import MongoClient
 import joblib
 
-# Carregar dados base (para features dos filmes)
-df = pd.read_csv("IMDBest.IMDBest.com_generos.csv", low_memory=False)
+# ==== CONEXÃO COM MONGODB ATLAS ====
+MONGO_URL = "mongodb+srv://admin:adminpi@pi.r3vqecf.mongodb.net/?retryWrites=true&w=majority&appName=PI"
+client = MongoClient(MONGO_URL)
+db = client["IMDBest"]
+colecao_filmes = db["generos"]
 
-# Carregar modelos e preprocessors
+# ==== CARREGAR MODELOS ====
 MODELOS = {
     "oscar_nominated": (
         joblib.load("Joblib/best_oscar_nominated_xgboost.joblib"),
@@ -31,7 +35,7 @@ MODELOS = {
     ),
 }
 
-# FastAPI app
+# ==== FASTAPI APP ====
 app = FastAPI()
 
 class ConsultaRequest(BaseModel):
@@ -40,9 +44,7 @@ class ConsultaRequest(BaseModel):
     categorias: list
 
 def preparar_features(filme, features):
-    # Prepara as features do filme para predição
     row = filme.copy()
-    # Garantir colunas auxiliares
     if 'genres_first2' in row and (('genre1' not in row) or ('genre2' not in row)):
         genres = row['genres_first2'].split(',')
         row['genre1'] = genres[0].strip() if len(genres) > 0 else 'unknown'
@@ -54,14 +56,17 @@ def preparar_features(filme, features):
 
 @app.post("/predict")
 def predict(request: ConsultaRequest):
-    # Buscar filme pelo título e ano
-    filme = df[(df['Title'].str.lower() == request.title.lower()) & (df['Year'] == request.year)]
-    if filme.empty:
+    filme = colecao_filmes.find_one({
+        "Title": {"$regex": f"^{request.title}$", "$options": "i"},
+        "Year": request.year
+    })
+
+    if not filme:
         raise HTTPException(status_code=404, detail="Filme não encontrado")
-    filme = filme.iloc[0].to_dict()
-    # Se já tem premiação, não retorna probabilidade
+
     if not pd.isna(filme.get('oscar_nominated')) or not pd.isna(filme.get('oscar_winner')):
         raise HTTPException(status_code=400, detail="Filme já possui indicação ou premiação")
+
     result = {}
     for cat in request.categorias:
         if cat not in MODELOS:
@@ -76,16 +81,28 @@ def predict(request: ConsultaRequest):
 @app.get("/top10")
 def top10(categoria: str = Query(..., enum=list(MODELOS.keys()))):
     model, preproc, features = MODELOS[categoria]
-    # Filtrar apenas filmes sem premiação
-    df_filmes = df[(df['oscar_winner'].isna()) & (df['oscar_nominated'].isna())].copy()
-    # Preencher genres
+
+    # Buscar filmes sem premiação
+    cursor = colecao_filmes.find({
+        "oscar_nominated": {"$in": [None, "", "nan"]},
+        "oscar_winner": {"$in": [None, "", "nan"]}
+    })
+    filmes = list(cursor)
+
+    if not filmes:
+        raise HTTPException(status_code=404, detail="Nenhum filme encontrado")
+
+    df_filmes = pd.DataFrame(filmes)
+
     split_genres = df_filmes['genres_first2'].str.split(',', n=1, expand=True)
     df_filmes['genre1'] = split_genres[0].str.strip().fillna('unknown')
     df_filmes['genre2'] = split_genres[1].str.strip().fillna('unknown') if split_genres.shape[1] > 1 else 'unknown'
+
     for col in features:
         if col not in df_filmes.columns:
             df_filmes[col] = 'unknown'
         df_filmes[col] = df_filmes[col].fillna('unknown' if col not in ['Year', 'Duration', 'Rating', 'Votes'] else 0)
+
     X = df_filmes[features]
     probs = model.predict_proba(preproc.transform(X))[:, 1]
     df_filmes['prob'] = probs
