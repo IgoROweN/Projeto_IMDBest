@@ -1,0 +1,62 @@
+# Node.js
+node_modules/
+.env
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.env
+*.egg-info/
+Joblib/
+
+# Flutter/Dart
+.iml
+.packages
+.pub/
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter-versions
+.idea/
+android/.gradle/
+android/app/debug/
+android/app/profile/
+android/app/release/
+*.lock
+*.log
+
+# VSCode
+.vscode/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Data/outputs
+*.csv
+*.xlsx
+*.xls
+*.db
+*.sqlite
+*.bak
+*.tmp
+
+# Docker
+*.pid
+
+# Ignore test outputs
+coverage/
+
+# Ignore secrets
+secrets.*
+
+# Ignore Jupyter
+.ipynb_checkpoints/
+
+# Ignore Docker Compose override
+*override.yml

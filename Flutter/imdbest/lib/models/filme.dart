@@ -11,6 +11,7 @@ class Filme {
   final String? elenco;
   final String? genero;
   final String? rottenTomatoes;
+  final String? originalTitle;
 
   Filme({
     this.tmdbId,
@@ -24,18 +25,20 @@ class Filme {
     this.elenco,
     this.genero,
     this.rottenTomatoes,
+    this.originalTitle,
   });
 
   // Factory para TMDB
   factory Filme.fromTmdbJson(Map<String, dynamic> json) {
     return Filme(
       tmdbId: json['id'], // Pegue o id do TMDB
-      titulo: json['title'] ?? '',
+      titulo: json['title'] ?? json['original_title'] ??'',
       ano: (json['release_date'] ?? '').split('-').first,
       posterUrl: json['poster_path'] != null
           ? 'https://image.tmdb.org/t/p/w500${json['poster_path']}'
           : null,
       imdbId: null, // Será preenchido depois
+      originalTitle: json['original_title'],
     );
   }
 
@@ -60,6 +63,37 @@ class Filme {
       elenco: json['Actors'],
       genero: json['Genre'],
       rottenTomatoes: rotten,
+      originalTitle: json['Title'], // OMDB não tem original_title, mas preenche com Title
+    );
+  }
+
+  Filme copyWith({
+    int? tmdbId,
+    String? titulo,
+    String? ano,
+    String? posterUrl,
+    String? imdbId,
+    String? notaImdb,
+    String? sinopse,
+    String? diretor,
+    String? elenco,
+    String? genero,
+    String? rottenTomatoes,
+    String? originalTitle,
+  }) {
+    return Filme(
+      tmdbId: tmdbId ?? this.tmdbId,
+      titulo: titulo ?? this.titulo,
+      ano: ano ?? this.ano,
+      posterUrl: posterUrl ?? this.posterUrl,
+      imdbId: imdbId ?? this.imdbId,
+      notaImdb: notaImdb ?? this.notaImdb,
+      sinopse: sinopse ?? this.sinopse,
+      diretor: diretor ?? this.diretor,
+      elenco: elenco ?? this.elenco,
+      genero: genero ?? this.genero,
+      rottenTomatoes: rottenTomatoes ?? this.rottenTomatoes,
+      originalTitle: originalTitle ?? this.originalTitle,
     );
   }
 }

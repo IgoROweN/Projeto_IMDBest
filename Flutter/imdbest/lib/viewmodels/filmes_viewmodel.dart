@@ -80,8 +80,9 @@ class _FilmesScreenState extends State<FilmesScreen> {
                     ? Image.network(filme.posterUrl!)
                     : null,
                 title: Text(filme.titulo),
-                subtitle: Text(filme.ano),
+                subtitle: Text('Ano: ${filme.ano}\nOriginal: ${filme.originalTitle ?? "N/A"}'),
                 onTap: () {
+                  print('DEBUG Filme selecionado: titulo=${filme.titulo}, originalTitle=${filme.originalTitle}, ano=${filme.ano}');
                   Navigator.pushNamed(
                     context,
                     '/detalhes',
@@ -93,6 +94,38 @@ class _FilmesScreenState extends State<FilmesScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+extension FilmeCopyWith on Filme {
+  Filme copyWith({
+    int? tmdbId,
+    String? titulo,
+    String? ano,
+    String? posterUrl,
+    String? imdbId,
+    String? notaImdb,
+    String? sinopse,
+    String? diretor,
+    String? elenco,
+    String? genero,
+    String? rottenTomatoes,
+    String? originalTitle,
+  }) {
+    return Filme(
+      tmdbId: tmdbId ?? this.tmdbId,
+      titulo: titulo ?? this.titulo,
+      ano: ano ?? this.ano,
+      posterUrl: posterUrl ?? this.posterUrl,
+      imdbId: imdbId ?? this.imdbId,
+      notaImdb: notaImdb ?? this.notaImdb,
+      sinopse: sinopse ?? this.sinopse,
+      diretor: diretor ?? this.diretor,
+      elenco: elenco ?? this.elenco,
+      genero: genero ?? this.genero,
+      rottenTomatoes: rottenTomatoes ?? this.rottenTomatoes,
+      originalTitle: originalTitle ?? this.originalTitle,
     );
   }
 }

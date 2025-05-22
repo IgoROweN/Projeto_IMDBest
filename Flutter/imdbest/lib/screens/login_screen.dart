@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart'; // Importe o ApiService
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,8 +19,9 @@ class _LoginScreenState extends State<LoginScreen> {
       carregando = true;
       erro = null;
     });
-    await Future.delayed(const Duration(seconds: 1));
-    if (email == 'teste@teste.com' && senha == '123456') {
+    final api = ApiService();
+    final sucesso = await api.login(email, senha);
+    if (sucesso) {
       Navigator.pushReplacementNamed(context, '/main');
     } else {
       setState(() {

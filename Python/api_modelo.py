@@ -59,8 +59,14 @@ def tem_premiacao(valor):
 
 @app.post("/predict")
 def predict(request: ConsultaRequest):
+    # Normaliza o título removendo espaços extras
+    # Busca por Title OU original_title (case-insensitive)
+    titulo_normalizado = request.title.strip()
     filme = colecao_filmes.find_one({
-        "Title": {"$regex": f"^{request.title}$", "$options": "i"},
+        "$or": [
+            {"Title": {"$regex": f"^{titulo_normalizado}$", "$options": "i"}},
+            {"original_title": {"$regex": f"^{titulo_normalizado}$", "$options": "i"}}
+        ],
         "Year": int(request.year)
     })
 
@@ -85,11 +91,23 @@ def predict(request: ConsultaRequest):
 def top10(categoria: str = Query(..., enum=list(MODELOS.keys()))):
     model, preproc, features = MODELOS[categoria]
 
-    # Buscar filmes sem premiação
-    cursor = colecao_filmes.find({
-        "oscar_nominated": {"$in": [None, "", "nan"]},
-        "oscar_winner": {"$in": [None, "", "nan"]}
-    })
+    # Filtro dinâmico conforme a categoria
+    filtro = {
+        "oscar_nominated": {"$in": [None, "", "nan", False]},
+        "oscar_winner": {"$in": [None, "", "nan", False]},
+        "globe_nominated": {"$in": [None, "", "nan", False]},
+        "globe_winner": {"$in": [None, "", "nan", False]}
+    }
+    # Garante que NENHUM dos status de premiação esteja True
+    filtro_exclusao = {
+        "$and": [
+            {"oscar_nominated": {"$in": [None, "", "nan", False]}},
+            {"oscar_winner": {"$in": [None, "", "nan", False]}},
+            {"globe_nominated": {"$in": [None, "", "nan", False]}},
+            {"globe_winner": {"$in": [None, "", "nan", False]}}
+        ]
+    }
+    cursor = colecao_filmes.find(filtro_exclusao)
     filmes = list(cursor)
 
     if not filmes:
@@ -101,13 +119,19 @@ def top10(categoria: str = Query(..., enum=list(MODELOS.keys()))):
     df_filmes['genre1'] = split_genres[0].str.strip().fillna('unknown')
     df_filmes['genre2'] = split_genres[1].str.strip().fillna('unknown') if split_genres.shape[1] > 1 else 'unknown'
 
+    # Converter listas para string em todas as colunas exceto as numéricas
     for col in features:
         if col not in df_filmes.columns:
             df_filmes[col] = 'unknown'
+        # Preencher nulos
         df_filmes[col] = df_filmes[col].fillna('unknown' if col not in ['Year', 'Duration', 'Rating', 'Votes'] else 0)
+        # Converter listas para string
+        if col not in ['Year', 'Duration', 'Rating', 'Votes']:
+            df_filmes[col] = df_filmes[col].apply(lambda x: ', '.join(x) if isinstance(x, list) else x)
 
     X = df_filmes[features]
     probs = model.predict_proba(preproc.transform(X))[:, 1]
     df_filmes['prob'] = probs
     top = df_filmes.sort_values('prob', ascending=False).head(10)
     return top[['Title', 'Year', 'prob']].to_dict(orient='records')
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class CadastroScreen extends StatefulWidget {
   const CadastroScreen({super.key});
@@ -10,6 +11,8 @@ class _CadastroScreenState extends State<CadastroScreen> {
   final _formKey = GlobalKey<FormState>();
   String email = '';
   String senha = '';
+  String nome = '';
+  String confirmarSenha = '';
   String? erro;
   bool carregando = false;
 
@@ -18,8 +21,23 @@ class _CadastroScreenState extends State<CadastroScreen> {
       carregando = true;
       erro = null;
     });
-    await Future.delayed(const Duration(seconds: 1));
-    Navigator.pushReplacementNamed(context, '/login');
+    final api = ApiService();
+    if (senha != confirmarSenha) {
+      setState(() {
+        erro = 'As senhas não conferem';
+        carregando = false;
+      });
+      return;
+    }
+    final sucesso = await api.registrar(nome, email, senha, confirmarSenha);
+    if (sucesso) {
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      setState(() {
+        erro = 'Erro ao cadastrar. Verifique os dados.';
+        carregando = false;
+      });
+    }
   }
 
   @override
@@ -62,6 +80,27 @@ class _CadastroScreenState extends State<CadastroScreen> {
                       obscureText: true,
                       onChanged: (v) => senha = v,
                       validator: (v) => v != null && v.length >= 6 ? null : 'Senha muito curta',
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        labelText: 'Confirmar Senha',
+                        prefixIcon: Icon(Icons.lock_outline),
+                        border: OutlineInputBorder(),
+                      ),
+                      obscureText: true,
+                      onChanged: (v) => confirmarSenha = v,
+                      validator: (v) => v != null && v == senha ? null : 'As senhas não conferem',
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        labelText: 'Nome',
+                        prefixIcon: Icon(Icons.person_outline),
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (v) => nome = v,
+                      validator: (v) => v != null && v.isNotEmpty ? null : 'Nome obrigatório',
                     ),
                     if (erro != null) ...[
                       const SizedBox(height: 12),

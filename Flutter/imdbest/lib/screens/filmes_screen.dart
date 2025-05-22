@@ -59,6 +59,13 @@ class _FilmesScreenState extends State<FilmesScreen> {
     } else {
       final api = ApiService();
       final resultado = await api.buscarFilmesPorNome(valor);
+      // Preencher imdbId para cada filme buscado
+      for (var filme in resultado) {
+        if (filme.tmdbId != null) {
+          final imdbId = await api.buscarImdbIdTmdb(filme.tmdbId!);
+          filme.imdbId = imdbId;
+        }
+      }
       setState(() {
         filmes = resultado;
         carregando = false;
